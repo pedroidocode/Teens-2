@@ -1,0 +1,10 @@
+# Continuação do app das caixas
+
+✓ Fazer o botão da gravidade
+✓ Adicionar legenda contendo a gravidade
+✓ Criar um pouco de aleatoriedade (caixas de diferente tamanhos, caindo de posições X diferentes
+- Criar um "player"
+- Fazer o player se mover para a direita e esquerda, baseado no toque da tela
+- Criar um sistema de colisão
+- Diferenciar a colisão do chão, caixas e do jogador
+- Criar um sistema de pontuação
