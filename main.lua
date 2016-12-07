@@ -13,13 +13,12 @@
 local physics = require( "physics" )
 local widget  = require( "widget")
 
-local elasticidade = 0.3
-
 physics.start()
 
 local sky = display.newImage( "bkg_clouds.png", 160, 195 )
 
 local ground = display.newImage( "ground.png", 160, 445 )
+ground.width = 360
 
 physics.addBody( ground, "static", { friction=0.5, bounce=0.3 } )
 
@@ -30,83 +29,36 @@ local numCaixas = 1
 
 --physics.setDrawMode( "hybrid")
 
-local function derrubaCaixa( event )
+local function derrubaCaixa()
     
     crate[numCaixas] = display.newImage( "soccer-ball.png", 180, -50 )
     --crate[numCaixas].rotation = numCaixas*10
     crate[numCaixas].width = 50
     crate[numCaixas].height = 50
-    crate[numCaixas].x = 160
-    physics.addBody( crate[numCaixas], { density=3.0, friction=0.5, radius=crate[numCaixas].width/2, bounce=elasticidade } )
+    crate[numCaixas].x = math.random(0,320)
+    physics.addBody( crate[numCaixas], { density=3.0, friction=0.5, radius=crate[numCaixas].width/2, bounce=0.9 } )
     numCaixas = numCaixas+1
 
 end
 
-local botao = widget.newButton(
-    {
-        x = 50,
-        y = 350,
-        label = "+",
-        fontSize = 50,
-        shape = "circle",
-        radius = 30,
-        fillColor = { default={1, 1, 1, 0.7}, over={0.8, 0.8, 0.8, 0.5}},
-        onPress = derrubaCaixa
-    }
-)
-
--- Criar slider que altera elasticidade das caixas
-
-local function alteraElasticidade( event )
-    elasticidade = event.value/100
-end
-
-local elasticidadeSlider = widget.newSlider(
-
-    {
-        x = 50,
-        y = 200,
-        orientation = "vertical",
-        height = 100,
-        listener = alteraElasticidade
-    }
-)
-
 -- Criar botão que altera a gravidade
 
-local gravidadeInicial = 9.81
-local gravidadeTexto = display.newText(gravidadeInicial .. "m/s²", 240, 5, "Comic Sans MS", 30)
+local gravidade = 1.6
+local gravidadeTexto = display.newText(gravidade .. "m/s²", 160, 65, "Comic Sans MS", 30)
 gravidadeTexto:setFillColor(1, 1, 1, 0.8)
 
-local function alteraGravidade(event)
+gravidadeTexto.text = gravidade .. "m/s²"
+physics.setGravity(0, gravidade)
 
-    if (event.phase == "increment") then
-        gravidadeInicial = gravidadeInicial+2
-    elseif (event.phase == "decrement") then
-        gravidadeInicial = gravidadeInicial-2
-    end
+local function aumentaGravidade()
 
-    gravidadeTexto.text = gravidadeInicial .. "m/s²"
-    physics.setGravity(0, gravidadeInicial)
+    gravidade = gravidade + 0.1
+    gravidadeTexto.text = gravidade .. "m/s²"
+    physics.setGravity(0, gravidade)
 
 end
 
-local botaoGravidade = widget.newStepper(
-
-    {
-        x = 240,
-        y = 40,
-        minimumValue = -20,
-        maximumValue = 100,
-        initialValue = 0,
-        onPress = alteraGravidade
-    }
-
-)
-
 -- Criar novo player
-
-physics.setDrawMode("hybrid")
 
 local player = display.newImage("ronaldinho.png")
 player.width = 80
@@ -135,20 +87,36 @@ speed = 20; -- Set Walking Speed
 
  -- Colisão e sistema de pontuação
 local pontos = 0
-local pontuacaoTexto = display.newText(pontos, 50, 20, "Comic Sans MS", 50)
-gravidadeTexto:setFillColor(1, 1, 1, 0.8)
+local pontuacaoTexto = display.newText(pontos, 160, 20, "Comic Sans MS", 60)
+pontuacaoTexto:setFillColor(1, 1, 0, 0.8)
 
-local function colisaoLocal( self, event )
+local function colisaoPlayerBola( self, event )
 
-    if event.phase == "began" and event.target == player and event.other ~= ground and event.other.x > 150 then
+    if event.phase == "began" and event.target == player and event.other ~= ground and event.other.y < 240 then
         pontos = pontos+1
-        print(pontos)        
+        print(pontos) 
     end
 
     pontuacaoTexto.text = pontos
 
 end
 
-player.collision = colisaoLocal
+player.collision = colisaoPlayerBola
 player:addEventListener( "collision" )
 
+local function colisaoBolaChao( self, event )
+
+    if event.phase == "began" and event.target == ground and event.other ~= player then
+        pontos = pontos-1
+        print(pontos) 
+    end
+
+    pontuacaoTexto.text = pontos
+
+end
+
+ground.collision = colisaoBolaChao
+ground:addEventListener( "collision" )
+
+timer.performWithDelay( 3000, derrubaCaixa, 0 )
+timer.performWithDelay( 500, aumentaGravidade, 0)
